@@ -21,6 +21,16 @@ std::vector<std::string> Split(const std::string& s, char sep) {
   out.push_back(cur);
   return out;
 }
+// Strict integer parse: the whole (optionally signed) field must be digits.
+bool ParseInt(const std::string& s, int* out) {
+  if (s.empty()) return false;
+  char* end = nullptr;
+  long v = std::strtol(s.c_str(), &end, 10);
+  if (end != s.c_str() + s.size()) return false;  // trailing junk
+  *out = static_cast<int>(v);
+  return true;
+}
+
 }  // namespace
 
 std::string SerializeBinding(const BindingData& b) {
@@ -44,11 +54,15 @@ bool ParseBinding(const std::string& guid, const std::string& value,
   BindingData b;
   b.guid = guid;
   b.strip.type = type;
-  b.strip.index = std::atoi(f[2].c_str());
+  int index, enabled, mute, fader;
+  if (!ParseInt(f[2], &index) || !ParseInt(f[3], &enabled) ||
+      !ParseInt(f[4], &mute) || !ParseInt(f[5], &fader))
+    return false;
+  b.strip.index = index;
   if (!b.strip.valid()) return false;
-  b.enabled = std::atoi(f[3].c_str()) != 0;
-  b.mirror_mute = std::atoi(f[4].c_str()) != 0;
-  b.mirror_fader = std::atoi(f[5].c_str()) != 0;
+  b.enabled = enabled != 0;
+  b.mirror_mute = mute != 0;
+  b.mirror_fader = fader != 0;
   *out = b;
   return true;
 }

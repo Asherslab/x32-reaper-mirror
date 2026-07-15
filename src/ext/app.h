@@ -87,6 +87,7 @@ class App {
   reaper_plugin_info_t* rec_ = nullptr;
   REAPER_PLUGIN_HINSTANCE hinstance_ = nullptr;
   HWND main_hwnd_ = nullptr;
+  bool shutdown_done_ = false;
 };
 
 extern App* g_app;

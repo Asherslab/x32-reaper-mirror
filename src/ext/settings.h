@@ -13,7 +13,7 @@ struct Settings {
   std::string ip = "192.168.0.2";  // last console IP
   int port = 10023;                // X32 OSC port
   bool autoconnect = false;        // connect on load
-  int repoll_interval_ms = 0;      // 0 = off; periodic full re-poll to heal loss
+  int repoll_interval_ms = 30000;  // periodic full re-poll to heal loss (0 = off)
   int log_level = 2;               // 0=Error 1=Warn 2=Info 3=Debug
   int dock_state = 1;              // 1 = docked (passed to DockWindowAddEx)
   bool master_enabled = true;      // global master switch (persisted)

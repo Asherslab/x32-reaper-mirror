@@ -18,17 +18,31 @@ struct Glyph {
   char c;
   unsigned char rows[5];
 };
+// Full uppercase alphabet + digits + a few punctuation marks, so strip
+// labels, "BIND", "(missing)", track names, and "X32 (no ext)" all render
+// instead of falling back to blank/garbled glyphs.
 const Glyph kFont[] = {
     {'0', {7, 5, 5, 5, 7}}, {'1', {2, 6, 2, 2, 7}}, {'2', {7, 1, 7, 4, 7}},
     {'3', {7, 1, 7, 1, 7}}, {'4', {5, 5, 7, 1, 1}}, {'5', {7, 4, 7, 1, 7}},
     {'6', {7, 4, 7, 5, 7}}, {'7', {7, 1, 2, 2, 2}}, {'8', {7, 5, 7, 5, 7}},
-    {'9', {7, 5, 7, 1, 7}}, {'A', {7, 5, 7, 5, 5}}, {'B', {6, 5, 6, 5, 6}},
-    {'C', {7, 4, 4, 4, 7}}, {'D', {6, 5, 5, 5, 6}}, {'H', {5, 5, 7, 5, 5}},
-    {'S', {7, 4, 7, 1, 7}}, {'U', {5, 5, 5, 5, 7}}, {'X', {5, 5, 2, 5, 5}},
+    {'9', {7, 5, 7, 1, 7}},
+    {'A', {2, 5, 7, 5, 5}}, {'B', {6, 5, 6, 5, 6}}, {'C', {3, 4, 4, 4, 3}},
+    {'D', {6, 5, 5, 5, 6}}, {'E', {7, 4, 6, 4, 7}}, {'F', {7, 4, 6, 4, 4}},
+    {'G', {3, 4, 5, 5, 3}}, {'H', {5, 5, 7, 5, 5}}, {'I', {7, 2, 2, 2, 7}},
+    {'J', {1, 1, 1, 5, 2}}, {'K', {5, 5, 6, 5, 5}}, {'L', {4, 4, 4, 4, 7}},
+    {'M', {5, 7, 5, 5, 5}}, {'N', {5, 7, 7, 5, 5}}, {'O', {2, 5, 5, 5, 2}},
+    {'P', {6, 5, 6, 4, 4}}, {'Q', {2, 5, 5, 7, 1}}, {'R', {6, 5, 6, 5, 5}},
+    {'S', {7, 4, 7, 1, 7}}, {'T', {7, 2, 2, 2, 2}}, {'U', {5, 5, 5, 5, 7}},
+    {'V', {5, 5, 5, 5, 2}}, {'W', {5, 5, 5, 7, 5}}, {'X', {5, 5, 2, 5, 5}},
+    {'Y', {5, 5, 2, 2, 2}}, {'Z', {7, 1, 2, 4, 7}},
+    {'(', {2, 4, 4, 4, 2}}, {')', {2, 1, 1, 1, 2}}, {'-', {0, 0, 7, 0, 0}},
+    {'.', {0, 0, 0, 0, 2}}, {'_', {0, 0, 0, 0, 7}}, {':', {0, 2, 0, 2, 0}},
+    {'/', {1, 2, 2, 4, 4}},
     {' ', {0, 0, 0, 0, 0}},
 };
 
 const Glyph* FindGlyph(char c) {
+  if (c >= 'a' && c <= 'z') c = static_cast<char>(c - 'a' + 'A');
   for (const auto& g : kFont)
     if (g.c == c) return &g;
   return nullptr;
@@ -98,7 +112,7 @@ void PaintButton(REAPER_FXEMBED_IBitmap* bmp, REAPER_FXEMBED_DrawInfo* info,
   if (!iface) {
     c.FillRect(0, 0, c.w, c.h, Rgba(40, 40, 44));
     c.Outline(0, 0, c.w, c.h, Rgba(90, 90, 96));
-    c.DrawText("X32", 4, (c.h - 5 * 2) / 2, 2, Rgba(150, 150, 160));
+    c.DrawText("X32 (no ext)", 4, (c.h - 5) / 2, 1, Rgba(150, 150, 160));
     return;
   }
 
@@ -143,14 +157,19 @@ void PaintButton(REAPER_FXEMBED_IBitmap* bmp, REAPER_FXEMBED_DrawInfo* info,
     c.DrawText(v.track_resolved ? v.track_name : "(missing)", 4, 16, 1, fg);
 }
 
-INT_PTR OnMouse(int msg, REAPER_FXEMBED_DrawInfo* /*info*/,
+INT_PTR OnMouse(int msg, REAPER_FXEMBED_DrawInfo* info,
                 X32Mirror_Interface* iface, const char* guid) {
   if (!iface || !guid || !guid[0]) return 0;
   switch (msg) {
-    case REAPER_FXEMBED_WM_LBUTTONUP:
-      // Toggle this binding's enable flag.
+    case REAPER_FXEMBED_WM_LBUTTONUP: {
+      // fx-embed auto-captures on mouse-down, so a press-and-drag-off before
+      // release must not still toggle the binding on a live mix.
+      if (info && (info->mouse_x < 0 || info->mouse_y < 0 ||
+                   info->mouse_x >= info->width || info->mouse_y >= info->height))
+        return 0;
       iface->ToggleBindingEnabled(guid);
       return REAPER_FXEMBED_RETNOTIFY_INVALIDATE;
+    }
     case REAPER_FXEMBED_WM_RBUTTONUP:
       // Open the panel preselected to this track, where mute/fader/remove
       // controls live. (A native in-bitmap popup is not portable without

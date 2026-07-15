@@ -5,6 +5,7 @@
 #include "actions.h"
 #include "app.h"
 #include "binding_store.h"
+#include "log.h"
 #include "reaper_api.h"
 #include "ui_compat.h"
 
@@ -15,8 +16,14 @@ namespace {
 App* g_menus_app = nullptr;
 
 // Context string for the track control-panel (TCP/MCP) right-click menu.
-// SWS-confirmed; unknown menustr values are logged once at runtime elsewhere.
 constexpr const char* kTrackCtx = "Track control panel context";
+
+void LogUnknownMenustrOnce(const char* menustr) {
+  static bool logged = false;
+  if (logged || !menustr) return;
+  logged = true;
+  X32LOGD("hookcustommenu: unhandled menustr \"%s\"", menustr);
+}
 
 void AddItem(HMENU sub, const char* text, const char* action_idstr,
              bool checked, bool enabled) {
@@ -29,8 +36,26 @@ void AddItem(HMENU sub, const char* text, const char* action_idstr,
 
 void OnCustomMenu(const char* menustr, HMENU menu, int flag) {
   if (!g_menus_app || !menu) return;
-  if (!menustr || std::strcmp(menustr, kTrackCtx) != 0) return;
-  if (flag != 0) return;  // 0 = build the menu
+  if (!menustr || std::strcmp(menustr, kTrackCtx) != 0) {
+    LogUnknownMenustrOnce(menustr);
+    return;
+  }
+  // flag 0 = build the menu; flag 1 = about to show a cached menu (refresh
+  // checkmarks). Handled identically: any previously appended "X32 Mirror"
+  // entry (and its separator) is dropped and rebuilt from current state.
+  if (flag != 0 && flag != 1) return;
+
+  int existing_count = static_cast<int>(GetMenuItemCount(menu));
+  for (int i = existing_count - 1; i >= 0; --i) {
+    char text[64] = {0};
+    GetMenuString(menu, static_cast<UINT>(i), text, sizeof(text),
+                  MF_BYPOSITION);
+    if (std::strcmp(text, "X32 Mirror") == 0) {
+      RemoveMenu(menu, static_cast<UINT>(i), MF_BYPOSITION);
+      if (i > 0) RemoveMenu(menu, static_cast<UINT>(i - 1), MF_BYPOSITION);
+      break;
+    }
+  }
 
   App* app = g_menus_app;
   std::string guid = app->FirstSelectedGuid();

@@ -64,9 +64,8 @@ bool App::Init(reaper_plugin_info_t* rec, REAPER_PLUGIN_HINSTANCE hinst) {
 }
 
 void App::Shutdown() {
-  static bool done = false;
-  if (done) return;
-  done = true;
+  if (shutdown_done_) return;
+  shutdown_done_ = true;
 
   if (plugin_register)
     plugin_register("-timer", reinterpret_cast<void*>(&TimerCallback));

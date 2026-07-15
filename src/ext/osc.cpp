@@ -58,15 +58,6 @@ std::vector<uint8_t> OscEncodeQuery(const std::string& address) {
   return out;
 }
 
-std::vector<uint8_t> OscEncodeString(const std::string& address,
-                                     const std::string& value) {
-  std::vector<uint8_t> out;
-  PutString(out, address);
-  PutString(out, ",s");
-  PutString(out, value);
-  return out;
-}
-
 bool OscDecode(const uint8_t* buf, size_t len, OscMessage* out) {
   if (!buf || len < 4) return false;
   // Bundles ("#bundle") are not used by the X32 and not supported here.

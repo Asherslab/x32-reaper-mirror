@@ -33,9 +33,14 @@ jobs:
       # REAPER's own SWELL at runtime, so no GTK/X11 dev packages are needed to
       # *build* the module. Perl is used by swell_resgen (preinstalled on the
       # Ubuntu/macOS runners).
-      - name: Configure (Unix)
-        if: runner.os != 'Windows'
+      - name: Configure (Linux)
+        if: runner.os == 'Linux'
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Configure (macOS)
+        if: runner.os == 'macOS'
+        # Universal binary, matching the macos-universal CMakePresets entry.
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
 
       - name: Configure (Windows)
         if: runner.os == 'Windows'

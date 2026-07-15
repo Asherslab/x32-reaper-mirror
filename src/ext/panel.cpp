@@ -143,7 +143,11 @@ void Panel::OnInit() {
 void Panel::RebuildList() {
   HWND lb = GetDlgItem(hwnd_, IDC_LIST);
   if (!lb) return;
-  int prev = static_cast<int>(SendMessage(lb, LB_GETCURSEL, 0, 0));
+  int prev_idx = static_cast<int>(SendMessage(lb, LB_GETCURSEL, 0, 0));
+  std::string prev_guid = (prev_idx >= 0 &&
+                           prev_idx < static_cast<int>(row_guids_.size()))
+                              ? row_guids_[prev_idx]
+                              : std::string();
   SendMessage(lb, LB_RESETCONTENT, 0, 0);
   row_guids_.clear();
 
@@ -161,7 +165,7 @@ void Panel::RebuildList() {
     char strip_lbl[24];
     StripLabel(b->strip, strip_lbl, sizeof(strip_lbl));
 
-    char name[128] = "";
+    char name[512] = "";
     if (tr && GetSetMediaTrackInfo_String)
       GetSetMediaTrackInfo_String(tr, "P_NAME", name, false);
 
@@ -177,8 +181,11 @@ void Panel::RebuildList() {
     row_guids_.push_back(b->guid);
   }
 
-  if (prev >= 0 && prev < static_cast<int>(row_guids_.size()))
-    SendMessage(lb, LB_SETCURSEL, prev, 0);
+  if (!prev_guid.empty()) {
+    auto it = std::find(row_guids_.begin(), row_guids_.end(), prev_guid);
+    if (it != row_guids_.end())
+      SendMessage(lb, LB_SETCURSEL, it - row_guids_.begin(), 0);
+  }
 }
 
 void Panel::UpdateStatus() {

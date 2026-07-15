@@ -230,6 +230,7 @@ void X32Connection::RunConnecting() {
   int64_t start = NowMs();
   last_rx_ = 0;  // reset; a reply after `start` means the console is alive
   SendQuery("/info");
+  bool reprobed = false;
   while (running_.load()) {
     // Bail if a command arrived (handled by the outer loop).
     {
@@ -246,11 +247,14 @@ void X32Connection::RunConnecting() {
         return;
       }
     }
-    // Re-probe midway through the window in case the first was lost.
-    if (NowMs() - start > cfg_.info_timeout_ms / 2) SendQuery("/info");
+    // Re-probe once, midway through the window, in case the first was lost.
+    if (!reprobed && NowMs() - start > cfg_.info_timeout_ms / 2) {
+      reprobed = true;
+      SendQuery("/info");
+    }
   }
-  // Timed out.
-  if (backoff_idx_ < static_cast<int>(cfg_.backoff_ms.size()) - 1) ++backoff_idx_;
+  // Timed out. SetState(Lost, ...) below computes the backoff deadline from
+  // backoff_idx_ as-is; do not increment here too (see SetState).
   SetState(ConnState::Lost, "No response — retrying");
 }
 

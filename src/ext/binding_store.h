@@ -67,6 +67,11 @@ class BindingStore {
   // Invalidate the GUID→track scan cache (call on project structure change).
   void InvalidateTrackCache();
 
+  // Mark the GUID→track scan stale without touching per-binding cached
+  // pointers; cheap enough to call once per timer tick (~30 Hz) so newly
+  // added tracks resolve promptly and deleted ones drop out.
+  void InvalidateTrackScan() { track_scan_valid_ = false; }
+
  private:
   void WriteThrough(const Binding& b);
   void Erase(const std::string& guid);

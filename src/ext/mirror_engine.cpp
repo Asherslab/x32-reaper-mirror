@@ -31,6 +31,7 @@ bool MirrorEngine::EffectiveOn(const Binding& b, Param p) const {
 
 void MirrorEngine::Tick() {
   CheckProjectSwitch();
+  store_->InvalidateTrackScan();
   DrainControl();
 
   queue_->Drain(&scratch_);
@@ -166,7 +167,7 @@ bool MirrorEngine::BuildBindingView(const std::string& guid, BindingView* out) {
   MediaTrack* tr = store_->ResolveTrack(b);
   out->track_resolved = tr ? 1 : 0;
   if (tr && GetSetMediaTrackInfo_String) {
-    char name[128] = {0};
+    char name[512] = {0};
     if (GetSetMediaTrackInfo_String(tr, "P_NAME", name, false))
       std::snprintf(out->track_name, sizeof(out->track_name), "%s", name);
   }

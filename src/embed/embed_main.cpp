@@ -77,7 +77,9 @@ intptr_t Dispatcher(AEffect* effect, int32_t opcode, int32_t index,
   EmbedInstance* inst = Inst(effect);
   switch (opcode) {
     case effOpen:
+      return 0;
     case effClose:
+      delete inst;
       return 0;
     case effGetVendorString:
       if (ptr) std::strcpy(static_cast<char*>(ptr), "X32Mirror");

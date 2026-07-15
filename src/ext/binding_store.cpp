@@ -149,10 +149,13 @@ MediaTrack* BindingStore::ResolveTrack(Binding* b) {
     b->resolved = true;
     return b->track;
   }
-  // Slow path: (re)scan and look up by GUID.
+  // Slow path: (re)scan (scan is invalidated once per timer tick, see
+  // MirrorEngine::Tick) and look up by GUID, validating the hit so a stale
+  // entry for a deleted track is never handed back.
   EnsureTrackScan();
   auto it = track_scan_.find(b->guid);
-  if (it != track_scan_.end() && it->second) {
+  if (it != track_scan_.end() && it->second && ValidatePtr2 && proj_ &&
+      ValidatePtr2(proj_, it->second, "MediaTrack*")) {
     b->track = it->second;
     b->resolved = true;
     return b->track;

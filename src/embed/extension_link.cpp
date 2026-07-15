@@ -18,7 +18,7 @@ constexpr int32_t kContextTrack = 1;
 void* HostGetFunc(AEffect* effect, audioMasterCallback am, const char* name) {
   if (!am) return nullptr;
   return reinterpret_cast<void*>(
-      am(effect, kReaperVendor, 0, kSelGetFunc,
+      am(effect, kReaperVendor, static_cast<int32_t>(kSelGetFunc), 0,
          const_cast<char*>(name), 0.0f));
 }
 }  // namespace
@@ -66,7 +66,8 @@ X32Mirror_Interface* ExtensionLink::Interface(AEffect* effect,
 void* ExtensionLink::HostTrack(AEffect* effect, audioMasterCallback am) {
   if (!am) return nullptr;
   return reinterpret_cast<void*>(
-      am(effect, kReaperVendor, kContextTrack, kSelGetContext, nullptr, 0.0f));
+      am(effect, kReaperVendor, static_cast<int32_t>(kSelGetContext),
+         kContextTrack, nullptr, 0.0f));
 }
 
 const char* ExtensionLink::HostGuid(AEffect* effect, audioMasterCallback am) {

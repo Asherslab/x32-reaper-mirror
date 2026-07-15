@@ -39,6 +39,7 @@ addresses (``set ch01 0.75`` sets ``/ch/01/mix/fader``; ``mute ch01 0`` sets
 
 import argparse
 import os
+import random
 import re
 import select
 import socket
@@ -198,6 +199,7 @@ class X32Sim:
         except OSError:
             pass
         self.sock.bind((args.listen, args.port))
+        self._rng = random.Random(args.seed)
         self._seed_defaults()
 
     def _seed_defaults(self):
@@ -219,10 +221,7 @@ class X32Sim:
     # --- transmit with optional loss/latency -----------------------------
     def _raw_send(self, data, addr):
         if self.args.loss > 0.0:
-            # Deterministic-ish pseudo loss without importing random for
-            # reproducibility across runs: hash of payload+addr.
-            h = (hash(data) ^ hash(addr)) & 0xFFFF
-            if (h / 65535.0) < self.args.loss:
+            if self._rng.random() < self.args.loss:
                 return
         if self.args.latency > 0:
             threading.Timer(
@@ -288,6 +287,9 @@ class X32Sim:
     def register_xremote(self, addr):
         now = time.monotonic()
         with self.lock:
+            dead = [c for c, t in self.clients.items() if now - t > self.XREMOTE_TTL]
+            for c in dead:
+                del self.clients[c]
             if addr not in self.clients and len(self.clients) >= self.MAX_CLIENTS:
                 # Console tops out at 4 clients; drop the request.
                 self.log(f"/xremote from {addr}: at client limit, ignoring")
@@ -397,7 +399,9 @@ class X32Sim:
 
         if self.args.script:
             self.run_script(self.args.script)
-            if not self.args.keep:
+            if self.args.keep:
+                self.repl()
+            else:
                 # Give late replies a moment to flush, then stop.
                 time.sleep(self.args.linger)
                 self.running = False
@@ -467,6 +471,8 @@ def main(argv=None):
     ap.add_argument("--fw", default="4.06")
     ap.add_argument("--loss", type=float, default=0.0,
                     help="outgoing packet loss fraction 0..1")
+    ap.add_argument("--seed", type=int, default=None,
+                    help="seed for --loss randomness (default: unseeded/random)")
     ap.add_argument("--latency", type=float, default=0.0,
                     help="added outgoing latency in ms")
     ap.add_argument("--script", help="run a stimulus script then exit")

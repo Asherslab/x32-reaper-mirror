@@ -40,12 +40,6 @@ struct OscMessage {
 // at the codec level: there is no encode path that appends a value argument.
 std::vector<uint8_t> OscEncodeQuery(const std::string& address);
 
-// Build a message with a single string argument (used only for /node-style
-// control addresses and never for strip values). Provided for completeness of
-// the codec; the connection layer restricts which addresses may use it.
-std::vector<uint8_t> OscEncodeString(const std::string& address,
-                                     const std::string& value);
-
 // --- Decoding ---------------------------------------------------------------
 
 // Decode a single OSC message from buf[0..len). Returns true on success.

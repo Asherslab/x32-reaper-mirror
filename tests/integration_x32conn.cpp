@@ -86,6 +86,23 @@ void KillSim(SimProc& s) {
   }
 }
 
+// Ask the sim to exit cleanly and assert it reports success (exit code 0).
+// The sim exits nonzero if it ever observed a value-carrying set message, so
+// this is what actually enforces the plan's automated one-way guarantee.
+void QuitSimAndCheck(SimProc& s) {
+  SimSend(s, "quit");
+  int status = 0;
+  pid_t pid = s.pid;
+  s.pid = -1;
+  waitpid(pid, &status, 0);
+  if (s.stdin_fd >= 0) {
+    close(s.stdin_fd);
+    s.stdin_fd = -1;
+  }
+  IEXPECT(WIFEXITED(status) && WEXITSTATUS(status) == 0,
+          "sim exited 0 on quit (one-way guarantee never violated)");
+}
+
 bool WaitForState(X32Connection& conn, ConnState want, int timeout_ms) {
   int waited = 0;
   while (waited < timeout_ms) {
@@ -177,7 +194,7 @@ int main(int argc, char** argv) {
   IEXPECT(WaitForState(conn, ConnState::Live, 8000), "auto-reconnected to LIVE");
 
   conn.Stop();
-  KillSim(sim);
+  QuitSimAndCheck(sim);
 
   std::printf("\n%s (%d failures)\n", g_fail == 0 ? "PASS" : "FAIL", g_fail);
   return g_fail == 0 ? 0 : 1;
