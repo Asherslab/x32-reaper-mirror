@@ -34,6 +34,12 @@ void AddItem(HMENU sub, const char* text, const char* action_idstr,
   MenuAppend(sub, flags, static_cast<UINT_PTR>(cmd), text);
 }
 
+// Tracks the "X32 Mirror" entry (+ its leading separator) appended to the
+// last menu we touched, so a flag==1 refresh pass can drop and rebuild it
+// without needing GetMenuString/RemoveMenu (neither exists in SWELL).
+HMENU g_last_menu = nullptr;
+int g_last_base_count = -1;  // item count of g_last_menu before we appended
+
 void OnCustomMenu(const char* menustr, HMENU menu, int flag) {
   if (!g_menus_app || !menu) return;
   if (!menustr || std::strcmp(menustr, kTrackCtx) != 0) {
@@ -45,15 +51,13 @@ void OnCustomMenu(const char* menustr, HMENU menu, int flag) {
   // entry (and its separator) is dropped and rebuilt from current state.
   if (flag != 0 && flag != 1) return;
 
-  int existing_count = static_cast<int>(GetMenuItemCount(menu));
-  for (int i = existing_count - 1; i >= 0; --i) {
-    char text[64] = {0};
-    GetMenuString(menu, static_cast<UINT>(i), text, sizeof(text),
-                  MF_BYPOSITION);
-    if (std::strcmp(text, "X32 Mirror") == 0) {
-      RemoveMenu(menu, static_cast<UINT>(i), MF_BYPOSITION);
-      if (i > 0) RemoveMenu(menu, static_cast<UINT>(i - 1), MF_BYPOSITION);
-      break;
+  int base_count = static_cast<int>(GetMenuItemCount(menu));
+  if (g_last_menu == menu && g_last_base_count >= 0 &&
+      g_last_base_count < base_count) {
+    // Remove the previously appended trailing items (separator + popup).
+    while (base_count > g_last_base_count) {
+      DeleteMenu(menu, base_count - 1, MF_BYPOSITION);
+      --base_count;
     }
   }
 
@@ -79,6 +83,9 @@ void OnCustomMenu(const char* menustr, HMENU menu, int flag) {
   // Attach the submenu under an "X32 Mirror" entry, with a leading separator.
   MenuAppend(menu, MF_SEPARATOR, 0, nullptr);
   MenuAppend(menu, MF_POPUP, reinterpret_cast<UINT_PTR>(sub), "X32 Mirror");
+
+  g_last_menu = menu;
+  g_last_base_count = base_count;
 }
 
 }  // namespace
@@ -93,6 +100,8 @@ void UnregisterMenus() {
   if (plugin_register)
     plugin_register("-hookcustommenu", reinterpret_cast<void*>(&OnCustomMenu));
   g_menus_app = nullptr;
+  g_last_menu = nullptr;
+  g_last_base_count = -1;
 }
 
 }  // namespace x32

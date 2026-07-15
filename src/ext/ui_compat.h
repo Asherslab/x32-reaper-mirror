@@ -6,6 +6,16 @@
 
 #include "reaper_api.h"  // pulls in <windows.h> or swell.h
 
+// SWELL (macOS/Linux Win32 shim) has no tab-stop rendering support for
+// listboxes; the flag is a real Win32 style bit on Windows but must exist as
+// a harmless no-op token everywhere else so panel_res.rc's LISTBOX style
+// (compiled through swell_resgen on non-Windows) still builds.
+#ifndef _WIN32
+#ifndef LBS_USETABSTOPS
+#define LBS_USETABSTOPS 0
+#endif
+#endif
+
 namespace x32 {
 
 // Append a menu item. SWELL has no AppendMenu; InsertMenu at the current item
