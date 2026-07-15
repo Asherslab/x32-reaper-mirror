@@ -16,6 +16,7 @@ struct Settings {
   int repoll_interval_ms = 0;      // 0 = off; periodic full re-poll to heal loss
   int log_level = 2;               // 0=Error 1=Warn 2=Info 3=Debug
   int dock_state = 1;              // 1 = docked (passed to DockWindowAddEx)
+  bool master_enabled = true;      // global master switch (persisted)
 
   // Load from the ini (missing file / keys keep defaults).
   void Load();

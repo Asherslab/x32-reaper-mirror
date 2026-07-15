@@ -46,6 +46,7 @@ void Settings::Load() {
     else if (key == "repoll_interval_ms") repoll_interval_ms = std::atoi(val.c_str());
     else if (key == "log_level") log_level = std::atoi(val.c_str());
     else if (key == "dock_state") dock_state = std::atoi(val.c_str());
+    else if (key == "master_enabled") master_enabled = std::atoi(val.c_str()) != 0;
   }
 }
 
@@ -61,6 +62,7 @@ void Settings::Save() const {
   f << "repoll_interval_ms=" << repoll_interval_ms << "\n";
   f << "log_level=" << log_level << "\n";
   f << "dock_state=" << dock_state << "\n";
+  f << "master_enabled=" << (master_enabled ? 1 : 0) << "\n";
 }
 
 }  // namespace x32

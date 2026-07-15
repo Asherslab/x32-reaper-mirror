@@ -62,6 +62,11 @@ class X32Connection {
   void Start();
   void Stop();
 
+  // Adjust the optional periodic re-poll interval. Call before Start() (or
+  // while disconnected) — the socket thread reads cfg_ live and this is a
+  // benign tuning value.
+  void set_repoll_interval_ms(int ms) { cfg_.repoll_interval_ms = ms; }
+
   // --- Commands (callable from the main thread) ---------------------------
   void Connect(const std::string& ip, uint16_t port);
   void Disconnect();

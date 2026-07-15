@@ -96,6 +96,32 @@ if(X32MIRROR_BUILD_REAPER)
     set_target_properties(reaper_x32mirror PROPERTIES SUFFIX ".so")
   endif()
 
+  # Panel dialog resource. On Windows the .rc is compiled by the resource
+  # compiler; on macOS/Linux swell_resgen translates it into a header included
+  # by panel.cpp.
+  if(WIN32)
+    target_sources(reaper_x32mirror PRIVATE src/ext/panel_res.rc)
+  else()
+    find_program(PERL_EXECUTABLE perl REQUIRED)
+    set(X32_GEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/gen")
+    file(MAKE_DIRECTORY "${X32_GEN_DIR}")
+    add_custom_command(
+      OUTPUT "${X32_GEN_DIR}/panel_res.rc_mac_dlg"
+             "${X32_GEN_DIR}/panel_res.rc_mac_menu"
+      COMMAND ${CMAKE_COMMAND} -E copy
+              "${CMAKE_CURRENT_SOURCE_DIR}/src/ext/panel_res.rc"
+              "${CMAKE_CURRENT_SOURCE_DIR}/src/ext/resource.h" "${X32_GEN_DIR}/"
+      COMMAND ${PERL_EXECUTABLE} "${WDL_DIR}/swell/swell_resgen.pl"
+              "${X32_GEN_DIR}/panel_res.rc"
+      DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/ext/panel_res.rc"
+              "${CMAKE_CURRENT_SOURCE_DIR}/src/ext/resource.h"
+      COMMENT "swell_resgen: panel_res.rc → SWELL dialog code"
+      VERBATIM)
+    set_source_files_properties(src/ext/panel.cpp PROPERTIES
+      OBJECT_DEPENDS "${X32_GEN_DIR}/panel_res.rc_mac_dlg")
+    target_include_directories(reaper_x32mirror PRIVATE "${X32_GEN_DIR}")
+  endif()
+
   # --- x32mirror_embed (VST2 companion) ---
   # NOTE: does NOT link the REAPER API import layer; it uses only runtime
   # pointers resolved via audioMaster.
