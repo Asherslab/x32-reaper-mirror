@@ -1,4 +1,6 @@
 // OSC codec round-trip and robustness tests.
+#include <cstring>
+
 #include "osc.h"
 #include "test_util.h"
 
@@ -27,7 +29,7 @@ static void TestDecodeFloat() {
   while (buf.size() % 4) buf.push_back(0);
   float f = 0.75f;
   uint32_t bits;
-  __builtin_memcpy(&bits, &f, 4);
+  std::memcpy(&bits, &f, 4);
   buf.push_back((bits >> 24) & 0xff);
   buf.push_back((bits >> 16) & 0xff);
   buf.push_back((bits >> 8) & 0xff);
