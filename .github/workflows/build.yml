@@ -39,7 +39,10 @@ jobs:
 
       - name: Configure (Windows)
         if: runner.os == 'Windows'
-        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+        # Let CMake auto-detect whichever Visual Studio the runner image ships
+        # (the generator version drifts as GitHub rolls the windows image), and
+        # force a 64-bit build.
+        run: cmake -S . -B build -A x64
 
       - name: Build (Unix)
         if: runner.os != 'Windows'

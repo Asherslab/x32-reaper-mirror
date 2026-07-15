@@ -29,9 +29,8 @@
     },
     {
       "name": "win-x64",
-      "inherits": "base",
       "displayName": "Windows x64 (MSVC)",
-      "generator": "Visual Studio 17 2022",
+      "comment": "No explicit generator: CMake auto-detects the installed Visual Studio (version drifts across toolchains); -A x64 forces a 64-bit build.",
       "architecture": "x64",
       "binaryDir": "${sourceDir}/build/win-x64",
       "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
