@@ -1,0 +1,15 @@
+# x32sim self-test stimulus script.
+# Exercises every stimulus verb. Since no client is connected here, these just
+# mutate internal state (no pushes go anywhere); the point is to prove the
+# simulator runs a full script cleanly and, crucially, never trips its own
+# one-way VIOLATION guard on its own traffic. Real end-to-end coverage lives in
+# the ctest integration_x32conn test, which drives the plugin against the sim.
+set /ch/01/mix/fader 0.75
+set ch02 0.5
+mute /ch/03/mix/on 0
+mute ch04 1
+set /bus/01/mix/fader 0.6
+set /dca/1/fader 0.9
+sweep /ch/05/mix/fader 0.0 1.0 0.2
+burst
+clients
