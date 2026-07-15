@@ -27,7 +27,8 @@ add_library(x32core STATIC
   src/ext/osc.cpp
   src/ext/udp_socket.cpp
   src/ext/x32_addresses.cpp
-  src/ext/x32_connection.cpp)
+  src/ext/x32_connection.cpp
+  src/ext/binding_serde.cpp)
 target_include_directories(x32core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src/common
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ext)
@@ -42,7 +43,7 @@ endif()
 if(X32MIRROR_BUILD_TESTS)
   enable_testing()
 
-  foreach(t test_osc test_fader_math test_addresses)
+  foreach(t test_osc test_fader_math test_addresses test_binding_serde)
     add_executable(${t} tests/${t}.cpp)
     target_link_libraries(${t} PRIVATE x32core)
     target_include_directories(${t} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests)
