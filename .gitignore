@@ -1,0 +1,19 @@
+# Build output
+/build/
+/build-*/
+/out/
+cmake-build-*/
+
+# Fetched dependencies (pulled via FetchContent at configure time)
+/_deps/
+
+# Editor / OS cruft
+.vscode/
+.idea/
+*.user
+.DS_Store
+*.swp
+
+# Python
+__pycache__/
+*.pyc

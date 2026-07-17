@@ -1,0 +1,45 @@
+#include "resource.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
+// Dockable "X32 Mirror" panel. Units are dialog units; swell_resgen translates
+// this DIALOG block into SWELL dialog-generation calls for macOS/Linux.
+IDD_X32PANEL DIALOG DISCARDABLE 0, 0, 340, 260
+STYLE DS_CENTER | WS_CHILD
+CAPTION "X32 Mirror"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    // --- connection row ---
+    LTEXT           "Console:",IDC_LBL_CONN,6,8,34,10
+    EDITTEXT        IDC_IP,42,6,90,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_PORT,136,6,34,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "Connect",IDC_CONNECT,174,6,50,13
+    PUSHBUTTON      "Scan…",IDC_SCAN,228,6,44,13
+    LTEXT           "Disconnected",IDC_STATUS,6,24,320,10
+
+    // --- master / bulk row ---
+    CONTROL         "Master mirror enabled",IDC_MASTER,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,6,40,110,12
+    PUSHBUTTON      "Enable All",IDC_ENABLE_ALL,120,39,50,13
+    PUSHBUTTON      "Disable All",IDC_DISABLE_ALL,172,39,50,13
+    PUSHBUTTON      "Force On",IDC_FORCE_ON,226,39,50,13
+    PUSHBUTTON      "Force Off",IDC_FORCE_OFF,278,39,50,13
+
+    // --- bindings list ---
+    LISTBOX         IDC_LIST,6,58,322,150,
+                    LBS_NOINTEGRALHEIGHT | LBS_USETABSTOPS | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Enable",IDC_TOGGLE_EN,6,212,44,13
+    PUSHBUTTON      "Mute",IDC_TOGGLE_MUTE,52,212,44,13
+    PUSHBUTTON      "Fader",IDC_TOGGLE_FADER,98,212,44,13
+    PUSHBUTTON      "Remove",IDC_DEL,144,212,44,13
+    PUSHBUTTON      "Insert FX",IDC_INSERT_EMBED,284,212,44,13
+
+    // --- add-binding row ---
+    LTEXT           "Bind selected →",IDC_LBL_ADD,6,234,60,10
+    COMBOBOX        IDC_STRIPTYPE,68,232,60,80,
+                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_STRIPNUM,132,232,30,13,ES_AUTOHSCROLL | ES_NUMBER
+    PUSHBUTTON      "Bind",IDC_BIND,166,232,44,13
+END
