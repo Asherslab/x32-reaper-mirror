@@ -22,7 +22,11 @@ void LogUnknownMenustrOnce(const char* menustr) {
   static bool logged = false;
   if (logged || !menustr) return;
   logged = true;
-  X32LOGD("hookcustommenu: unhandled menustr \"%s\"", menustr);
+  // Logged at Info (not Debug): this exists specifically to verify the
+  // PLAN.md-flagged assumption that REAPER's context string is exactly
+  // kTrackCtx, so it should be visible at the default log_level=2 rather
+  // than requiring the ini to be bumped to Debug first.
+  X32LOGI("hookcustommenu: unhandled menustr \"%s\"", menustr);
 }
 
 void AddItem(HMENU sub, const char* text, const char* action_idstr,
@@ -54,10 +58,24 @@ void OnCustomMenu(const char* menustr, HMENU menu, int flag) {
   int base_count = static_cast<int>(GetMenuItemCount(menu));
   if (g_last_menu == menu && g_last_base_count >= 0 &&
       g_last_base_count < base_count) {
-    // Remove the previously appended trailing items (separator + popup).
-    while (base_count > g_last_base_count) {
-      DeleteMenu(menu, base_count - 1, MF_BYPOSITION);
-      --base_count;
+    // Confirm item[base_count] is actually the separator we appended before
+    // trusting the heuristic — guards against a freed HMENU being reused for
+    // an unrelated, larger menu and us deleting its real trailing items.
+    MENUITEMINFO mii = {};
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_TYPE;
+    bool is_our_separator =
+        GetMenuItemInfo(menu, g_last_base_count, TRUE, &mii) &&
+        (mii.fType & MFT_SEPARATOR) != 0;
+    if (is_our_separator) {
+      // Remove the previously appended trailing items (separator + popup).
+      while (base_count > g_last_base_count) {
+        DeleteMenu(menu, base_count - 1, MF_BYPOSITION);
+        --base_count;
+      }
+    } else {
+      g_last_menu = nullptr;
+      g_last_base_count = -1;
     }
   }
 
